@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Tic Tac Toe</title>
+
+<style>
+:root{
+    --bg1:#090b18;
+    --bg2:#17102f;
+    --card:#ffffff12;
+    --line:#ffffff20;
+    --text:#f8f8ff;
+    --muted:#aaa8c5;
+    --x:#6ee7ff;
+    --o:#ff77c8;
+    --accent:#9b7cff;
+}
+
+*{
+    box-sizing:border-box;
+}
+
+html,body{
+    margin:0;
+    min-height:100%;
+    font-family:Inter,system-ui,Arial,sans-serif;
+    color:var(--text);
+}
+
+body{
+    min-height:100vh;
+    display:grid;
+    place-items:center;
+    padding:18px;
+    position:relative;
+    overflow-x:hidden;
+
+    background:
+        radial-gradient(circle at 20% 10%,#29205b 0,#11132a 35%,#070811 80%);
+}
+
+body::before,
+body::after{
+    content:"";
+    position:fixed;
+    width:260px;
+    height:260px;
+    border-radius:50%;
+    filter:blur(70px);
+    opacity:.32;
+    pointer-events:none;
+    animation:float 8s ease-in-out infinite alternate;
+}
+
+body::before{
+    background:#5d55ff;
+    left:-80px;
+    top:-70px;
+}
+
+body::after{
+    background:#ff3eaa;
+    right:-80px;
+    bottom:-80px;
+    animation-delay:-4s;
+}
+
+@keyframes float{
+    to{
+        transform:translate(45px,35px) scale(1.15);
+    }
+}
+
+.app{
+    width:min(94vw,560px);
+    position:relative;
+    z-index:1;
+}
+
+.top{
+    text-align:center;
+    margin-bottom:16px;
+}
+
+.eyebrow{
+    font-size:12px;
+    letter-spacing:3px;
+    color:var(--muted);
+    font-weight:800;
+}
+
+.title{
+    font-size:clamp(38px,10vw,62px);
+    line-height:1;
+    margin:6px 0 8px;
+    font-weight:950;
+    letter-spacing:-3px;
+
+    background:
+        linear-gradient(90deg,#fff,#bba9ff,#fff);
+
+    background-size:200%;
+
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+
+    animation:shine 4s linear infinite;
+}
+
+@keyframes shine{
+    to{
+        background-position:200%;
+    }
+}
+
+.subtitle{
+    color:var(--muted);
+    font-size:14px;
+}
+
+.card{
+    background:
+        linear-gradient(145deg,#ffffff13,#ffffff07);
+
+    border:1px solid var(--line);
+
+    box-shadow:
+        0 24px 80px #0008,
+        inset 0 1px #fff1;
+
+    border-radius:28px;
+    padding:18px;
+
+    backdrop-filter:blur(18px);
+}
+
+.modes{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:8px;
+    margin-bottom:15px;
+}
+
+.mode{
+    border:1px solid var(--line);
+    background:#ffffff08;
+    color:var(--muted);
+
+    padding:11px 6px;
+    border-radius:14px;
+
+    font-weight:800;
+    font-size:13px;
+
+    cursor:pointer;
+    transition:.25s;
+
+    -webkit-tap-highlight-color:transparent;
+}
+
+.mode:hover{
+    transform:translateY(-2px);
+    background:#fff1;
+}
+
+.mode.active{
+    color:#fff;
+
+    border-color:#9b7cffaa;
+
+    background:
+        linear-gradient(
+            135deg,
+            #9b7cff55,
+            #ff5fc633
+        );
+
+    box-shadow:0 0 24px #9b7cff22;
+}
+
+.status{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    margin:2px 3px 14px;
+
+    min-height:38px;
+}
+
+.turn{
+    font-weight:850;
+}
+
+.score{
+    color:var(--muted);
+    font-size:13px;
+    white-space:nowrap;
+}
+
+.score b{
+    color:#fff;
+}
+
+
+/* =========================
+   BOARD
+========================= */
+
+.board{
+    display:grid;
+
+    grid-template-columns:
+        repeat(3,minmax(0,1fr));
+
+    grid-template-rows:
+        repeat(3,minmax(0,1fr));
+
+    gap:10px;
+
+    width:100%;
+
+    aspect-ratio:1 / 1;
+
+    min-width:0;
+}
+
+.cell{
+    width:100%;
+    aspect-ratio:1 / 1;
+
+    min-width:0;
+    min-height:0;
+
+    padding:0;
+
+    overflow:hidden;
+
+    border:1px solid #ffffff1c;
+
+    border-radius:20px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff12,
+            #ffffff06
+        );
+
+    color:#fff;
+
+    cursor:pointer;
+
+    font-size:clamp(45px,12vw,78px);
+
+    font-weight:950;
+    line-height:1;
+
+    display:grid;
+    place-items:center;
+
+    box-shadow:
+        inset 0 1px #fff1,
+        0 8px 25px #0003;
+
+    transition:
+        transform .18s,
+        background .2s,
+        box-shadow .2s;
+
+    touch-action:manipulation;
+
+    -webkit-tap-highlight-color:transparent;
+}
+
+.cell:hover{
+    transform:translateY(-3px) scale(1.02);
+    background:#ffffff18;
+}
+
+.cell:active{
+    transform:scale(.95);
+}
+
+.cell.x{
+    color:var(--x);
+
+    text-shadow:
+        0 0 25px #6ee7ff88;
+
+    animation:
+        pop .35s cubic-bezier(.2,1.5,.5,1);
+}
+
+.cell.o{
+    color:var(--o);
+
+    text-shadow:
+        0 0 25px #ff77c888;
+
+    animation:
+        pop .35s cubic-bezier(.2,1.5,.5,1);
+}
+
+@keyframes pop{
+    0%{
+        transform:scale(.2);
+        opacity:.2;
+    }
+
+    70%{
+        transform:scale(1.12);
+    }
+
+    100%{
+        transform:scale(1);
+        opacity:1;
+    }
+}
+
+.cell.win{
+    animation:
+        win .65s ease-in-out infinite alternate;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff28,
+            #ffffff0d
+        );
+
+    border-color:#ffffff66;
+}
+
+@keyframes win{
+    to{
+        transform:scale(1.04);
+
+        box-shadow:
+            0 0 30px currentColor,
+            inset 0 1px #fff3;
+    }
+}
+
+
+/* =========================
+   BUTTONS
+========================= */
+
+.actions{
+    display:flex;
+    gap:9px;
+    margin-top:14px;
+}
+
+.btn{
+    flex:1;
+
+    border:1px solid var(--line);
+
+    background:#ffffff0b;
+
+    color:#fff;
+
+    border-radius:15px;
+
+    padding:12px;
+
+    font-weight:850;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.btn:hover{
+    background:#fff1;
+    transform:translateY(-2px);
+}
+
+.btn:active{
+    transform:scale(.96);
+}
+
+.btn.primary{
+    background:
+        linear-gradient(
+            135deg,
+            #8f78ff,
+            #b35cff
+        );
+
+    border-color:#fff2;
+
+    box-shadow:
+        0 8px 25px #8f78ff33;
+}
+
+.footer{
+    text-align:center;
+
+    color:#77758d;
+
+    font-size:11px;
+
+    margin-top:13px;
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:430px){
+
+    body{
+        padding:10px;
+    }
+
+    .card{
+        padding:13px;
+        border-radius:22px;
+    }
+
+    .board{
+        gap:7px;
+    }
+
+    .cell{
+        border-radius:16px;
+        font-size:17vw;
+    }
+
+    .mode{
+        font-size:12px;
+        padding:10px 4px;
+    }
+
+    .actions{
+        margin-top:10px;
+    }
+}
+</style>
+</head>
+
+
+<body>
+
+<main class="app">
+
+    <section class="top">
+
+        <div class="eyebrow">
+            ARCADE EDITION
+        </div>
+
+        <h1 class="title">
+            TIC TAC TOE
+        </h1>
+
+        <div class="subtitle">
+            Beat the AI. If you can. ✦
+        </div>
+
+    </section>
+
+
+    <section class="card">
+
+        <!-- DIFFICULTY -->
+
+        <div class="modes">
+
+            <button
+                class="mode active"
+                data-mode="easy">
+
+                Easy
+
+            </button>
+
+            <button
+                class="mode"
+                data-mode="hard">
+
+                Hard
+
+            </button>
+
+            <button
+                class="mode"
+                data-mode="impossible">
+
+                Impossible
+
+            </button>
+
+        </div>
+
+
+        <!-- STATUS -->
+
+        <div class="status">
+
+            <div
+                class="turn"
+                id="status">
+
+                Your turn
+                <span style="color:var(--x)">
+                    ●
+                </span>
+
+            </div>
+
+
+            <div class="score">
+
+                You
+                <b id="wins">0</b>
+
+                · Draw
+                <b id="draws">0</b>
+
+                · AI
+                <b id="losses">0</b>
+
+            </div>
+
+        </div>
+
+
+        <!-- BOARD -->
+
+        <div
+            class="board"
+            id="board">
+        </div>
+
+
+        <!-- BUTTONS -->
+
+        <div class="actions">
+
+            <button
+                class="btn primary"
+                id="newGame">
+
+                New Game
+
+            </button>
+
+            <button
+                class="btn"
+                id="resetScore">
+
+                Reset Score
+
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <div class="footer">
+        You are X · AI is O · Works on phone, tablet & PC
+    </div>
+
+</main>
+
+
+
+<script>
+
+/* =========================
+   ELEMENTS
+========================= */
+
+const boardElement =
+    document.getElementById("board");
+
+const statusElement =
+    document.getElementById("status");
+
+const modeButtons =
+    document.querySelectorAll(".mode");
+
+
+/* =========================
+   VARIABLES
+========================= */
+
+let board =
+    Array(9).fill("");
+
+let difficulty =
+    "easy";
+
+let gameOver =
+    false;
+
+let aiThinking =
+    false;
+
+
+/*
+    X = YOU
+    O = AI
+*/
+
+let startingPlayer =
+    "X";
+
+let hasStartedGame =
+    false;
+
+
+/*
+    Prevent old AI timers
+    from affecting a new game.
+*/
+
+let gameToken =
+    0;
+
+
+/* =========================
+   SCORE
+========================= */
+
+let score =
+    JSON.parse(
+        localStorage.getItem(
+            "ticTacToeScore"
+        )
+    ) || {
+
+        wins:0,
+        draws:0,
+        losses:0
+
+    };
+
+
+/* =========================
+   WINNING COMBINATIONS
+========================= */
+
+const winningLines = [
+
+    [0,1,2],
+    [3,4,5],
+    [6,7,8],
+
+    [0,3,6],
+    [1,4,7],
+    [2,5,8],
+
+    [0,4,8],
+    [2,4,6]
+
+];
+
+
+/* =========================
+   SAVE SCORE
+========================= */
+
+function saveScore(){
+
+    localStorage.setItem(
+        "ticTacToeScore",
+        JSON.stringify(score)
+    );
+
+    document.getElementById("wins")
+        .textContent = score.wins;
+
+    document.getElementById("draws")
+        .textContent = score.draws;
+
+    document.getElementById("losses")
+        .textContent = score.losses;
+}
+
+
+/* =========================
+   RENDER BOARD
+========================= */
+
+function renderBoard(){
+
+    boardElement.innerHTML = "";
+
+
+    board.forEach(
+        (value,index)=>{
+
+            const cell =
+                document.createElement("button");
+
+
+            cell.className =
+                "cell";
+
+
+            if(value){
+
+                cell.classList.add(
+                    value.toLowerCase()
+                );
+
+                cell.textContent =
+                    value;
+
+            }
+
+
+            cell.setAttribute(
+                "aria-label",
+                `Cell ${index+1}`
+            );
+
+
+            cell.addEventListener(
+                "click",
+                ()=>{
+                    playerMove(index);
+                }
+            );
+
+
+            boardElement.appendChild(
+                cell
+            );
+
+        }
+    );
+
+
+    saveScore();
+}
+
+
+/* =========================
+   CHECK RESULT
+========================= */
+
+function checkResult(currentBoard){
+
+    for(
+        const line of winningLines
+    ){
+
+        const [a,b,c] = line;
+
+
+        if(
+            currentBoard[a] &&
+            currentBoard[a] ===
+                currentBoard[b] &&
+            currentBoard[a] ===
+                currentBoard[c]
+        ){
+
+            return {
+
+                winner:
+                    currentBoard[a],
+
+                line:
+                    line
+
+            };
+
+        }
+
+    }
+
+
+    if(
+        currentBoard.every(
+            cell => cell !== ""
+        )
+    ){
+
+        return {
+
+            winner:"draw",
+
+            line:[]
+
+        };
+
+    }
+
+
+    return null;
+}
+
+
+/* =========================
+   PLAYER MOVE
+========================= */
+
+function playerMove(index){
+
+    if(
+        board[index] ||
+        gameOver ||
+        aiThinking
+    ){
+
+        return;
+
+    }
+
+
+    /*
+       If AI is the starter,
+       don't allow the player
+       to move first.
+    */
+
+    if(
+        startingPlayer === "O" &&
+        board.every(
+            cell => cell === ""
+        )
+    ){
+
+        return;
+
+    }
+
+
+    board[index] =
+        "X";
+
+
+    renderBoard();
+
+
+    const result =
+        checkResult(board);
+
+
+    if(result){
+
+        finishGame(result);
+
+        return;
+
+    }
+
+
+    makeAIMove();
+}
+
+
+/* =========================
+   AI MOVE
+========================= */
+
+function makeAIMove(){
+
+    aiThinking = true;
+
+
+    statusElement.textContent =
+        "AI is thinking…";
+
+
+    const currentGame =
+        gameToken;
+
+
+    let delay = 350;
+
+
+    if(
+        difficulty === "hard"
+    ){
+
+        delay = 500;
+
+    }
+
+
+    if(
+        difficulty === "impossible"
+    ){
+
+        delay = 650;
+
+    }
+
+
+    setTimeout(()=>{
+
+        /*
+           If a new game started,
+           cancel this old AI move.
+        */
+
+        if(
+            currentGame !== gameToken ||
+            gameOver
+        ){
+
+            return;
+
+        }
+
+
+        const move =
+            getAIMove();
+
+
+        if(
+            move !== -1
+        ){
+
+            board[move] =
+                "O";
+
+        }
+
+
+        renderBoard();
+
+
+        const result =
+            checkResult(board);
+
+
+        if(result){
+
+            finishGame(result);
+
+        }
+
+        else{
+
+            aiThinking = false;
+
+
+            statusElement.innerHTML =
+                `Your turn
+                <span style="color:var(--x)">
+                    ●
+                </span>`;
+
+        }
+
+    },delay);
+}
+
+
+/* =========================
+   EMPTY CELLS
+========================= */
+
+function getEmptyCells(currentBoard){
+
+    const cells = [];
+
+
+    for(
+        let i = 0;
+        i < currentBoard.length;
+        i++
+    ){
+
+        if(
+            currentBoard[i] === ""
+        ){
+
+            cells.push(i);
+
+        }
+
+    }
+
+
+    return cells;
+}
+
+
+/* =========================
+   AI MOVE SELECTION
+========================= */
+
+function getAIMove(){
+
+    const empty =
+        getEmptyCells(board);
+
+
+    if(
+        !empty.length
+    ){
+
+        return -1;
+
+    }
+
+
+    /*
+    ==================================
+       EASY
+    ==================================
+
+       VERY simple AI.
+
+       It randomly chooses
+       any empty square.
+
+       It does NOT always block you.
+       It does NOT always try to win.
+
+       So you can actually destroy
+       it on Easy 😂
+    */
+
+    if(
+        difficulty === "easy"
+    ){
+
+        return empty[
+            Math.floor(
+                Math.random() *
+                empty.length
+            )
+        ];
+
+    }
+
+
+    /*
+    ==================================
+       HARD
+    ==================================
+    */
+
+    if(
+        difficulty === "hard"
+    ){
+
+        /*
+           25% chance of making
+           a random mistake.
+        */
+
+        if(
+            Math.random() < 0.25
+        ){
+
+            return empty[
+                Math.floor(
+                    Math.random() *
+                    empty.length
+                )
+            ];
+
+        }
+
+
+        /*
+           Otherwise use minimax,
+           but only look a few moves ahead.
+        */
+
+        return minimax(
+            board,
+            "O",
+            4
+        ).index;
+
+    }
+
+
+    /*
+    ==================================
+       IMPOSSIBLE
+    ==================================
+
+       Full minimax.
+
+       The AI plays optimally.
+    */
+
+    return minimax(
+        board,
+        "O",
+        10
+    ).index;
+}
+
+
+/* =========================
+   MINIMAX
+========================= */
+
+function minimax(
+    currentBoard,
+    player,
+    depth
+){
+
+    const result =
+        checkResult(currentBoard);
+
+
+    if(
+        result?.winner === "O"
+    ){
+
+        return {
+
+            score:
+                10 + depth
+
+        };
+
+    }
+
+
+    if(
+        result?.winner === "X"
+    ){
+
+        return {
+
+            score:
+                -10 - depth
+
+        };
+
+    }
+
+
+    if(
+        result?.winner === "draw"
+    ){
+
+        return {
+
+            score:0
+
+        };
+
+    }
+
+
+    if(
+        depth <= 0
+    ){
+
+        return {
+
+            score:
+                evaluateBoard(
+                    currentBoard
+                )
+
+        };
+
+    }
+
+
+    const empty =
+        getEmptyCells(
+            currentBoard
+        );
+
+
+    let best = {
+
+        score:
+            player === "O"
+                ? -Infinity
+                : Infinity,
+
+        index:
+            empty[0]
+
+    };
+
+
+    for(
+        const index of empty
+    ){
+
+        currentBoard[index] =
+            player;
+
+
+        const result =
+            minimax(
+
+                currentBoard,
+
+                player === "O"
+                    ? "X"
+                    : "O",
+
+                depth - 1
+
+            );
+
+
+        currentBoard[index] =
+            "";
+
+
+        if(
+            player === "O"
+        ){
+
+            if(
+                result.score >
+                best.score
+            ){
+
+                best = {
+
+                    score:
+                        result.score,
+
+                    index:
+                        index
+
+                };
+
+            }
+
+        }
+
+        else{
+
+            if(
+                result.score <
+                best.score
+            ){
+
+                best = {
+
+                    score:
+                        result.score,
+
+                    index:
+                        index
+
+                };
+
+            }
+
+        }
+
+    }
+
+
+    return best;
+}
+
+
+/* =========================
+   BOARD EVALUATION
+========================= */
+
+function evaluateBoard(
+    currentBoard
+){
+
+    let score = 0;
+
+
+    for(
+        const line of winningLines
+    ){
+
+        let x = 0;
+        let o = 0;
+
+
+        for(
+            const index of line
+        ){
+
+            if(
+                currentBoard[index] === "X"
+            ){
+
+                x++;
+
+            }
+
+
+            if(
+                currentBoard[index] === "O"
+            ){
+
+                o++;
+
+            }
+
+        }
+
+
+        if(
+            o && !x
+        ){
+
+            score +=
+                o * 3;
+
+        }
+
+
+        if(
+            x && !o
+        ){
+
+            score -=
+                x * 3;
+
+        }
+
+    }
+
+
+    if(
+        currentBoard[4] === "O"
+    ){
+
+        score += 2;
+
+    }
+
+
+    if(
+        currentBoard[4] === "X"
+    ){
+
+        score -= 2;
+
+    }
+
+
+    return score;
+}
+
+
+/* =========================
+   FINISH GAME
+========================= */
+
+function finishGame(result){
+
+    gameOver = true;
+
+    aiThinking = false;
+
+
+    if(
+        result.winner === "X"
+    ){
+
+        score.wins++;
+
+
+        statusElement.innerHTML =
+            `
+            <span style="color:var(--x)">
+                YOU WIN! ✦
+            </span>
+
+            <small style="
+                display:block;
+                color:var(--muted);
+                font-size:11px;
+                margin-top:3px;
+            ">
+                Next game: AI starts
+            </small>
+            `;
+
+    }
+
+
+    else if(
+        result.winner === "O"
+    ){
+
+        score.losses++;
+
+
+        statusElement.innerHTML =
+            `
+            <span style="color:var(--o)">
+                AI WINS
+            </span>
+
+            <small style="
+                display:block;
+                color:var(--muted);
+                font-size:11px;
+                margin-top:3px;
+            ">
+                Next game: You start
+            </small>
+            `;
+
+    }
+
+
+    else{
+
+        score.draws++;
+
+
+        statusElement.innerHTML =
+            `
+            DRAW — Nice game!
+
+            <small style="
+                display:block;
+                color:var(--muted);
+                font-size:11px;
+                margin-top:3px;
+            ">
+                Next game:
+                ${
+                    startingPlayer === "X"
+                    ? "AI"
+                    : "You"
+                }
+                starts
+            </small>
+            `;
+
+    }
+
+
+    renderBoard();
+
+
+    /*
+       Winning animation
+    */
+
+    result.line.forEach(
+        index=>{
+
+            if(
+                boardElement.children[index]
+            ){
+
+                boardElement
+                    .children[index]
+                    .classList
+                    .add("win");
+
+            }
+
+        }
+    );
+
+
+    /*
+       Phone vibration
+    */
+
+    if(
+        navigator.vibrate
+    ){
+
+        navigator.vibrate(
+            result.winner === "draw"
+                ? 100
+                : [80,50,100]
+        );
+
+    }
+}
+
+
+/* =========================
+   NEW GAME
+========================= */
+
+function newGame(){
+
+    /*
+       Invalidate old AI timers.
+    */
+
+    gameToken++;
+
+
+    board =
+        Array(9).fill("");
+
+
+    gameOver =
+        false;
+
+
+    aiThinking =
+        false;
+
+
+    /*
+       Alternate starting player.
+
+       Game 1 → YOU
+       Game 2 → AI
+       Game 3 → YOU
+       Game 4 → AI
+       ...
+    */
+
+    if(
+        hasStartedGame
+    ){
+
+        startingPlayer =
+            startingPlayer === "X"
+                ? "O"
+                : "X";
+
+    }
+
+
+    hasStartedGame =
+        true;
+
+
+    renderBoard();
+
+
+    /*
+       YOU START
+    */
+
+    if(
+        startingPlayer === "X"
+    ){
+
+        statusElement.innerHTML =
+            `
+            Your turn
+            <span style="color:var(--x)">
+                ●
+            </span>
+            `;
+
+        return;
+    }
+
+
+    /*
+       AI STARTS
+    */
+
+    aiThinking = true;
+
+
+    statusElement.innerHTML =
+        `
+        <span style="color:var(--o)">
+            AI starts! ●
+        </span>
+        `;
+
+
+    const currentGame =
+        gameToken;
+
+
+    setTimeout(()=>{
+
+        if(
+            currentGame !== gameToken ||
+            gameOver
+        ){
+
+            return;
+
+        }
+
+
+        makeAIMove();
+
+    },300);
+}
+
+
+/* =========================
+   MODE BUTTONS
+========================= */
+
+modeButtons.forEach(
+    button=>{
+
+        button.addEventListener(
+            "click",
+            ()=>{
+
+                difficulty =
+                    button.dataset.mode;
+
+
+                modeButtons.forEach(
+                    other=>{
+
+                        other.classList.toggle(
+                            "active",
+                            other === button
+                        );
+
+                    }
+                );
+
+
+                /*
+                   Changing difficulty
+                   also starts a new game
+                   with alternating starter.
+                */
+
+                newGame();
+
+            }
+        );
+
+    }
+);
+
+
+/* =========================
+   NEW GAME BUTTON
+========================= */
+
+document
+    .getElementById("newGame")
+    .addEventListener(
+        "click",
+        newGame
+    );
+
+
+/* =========================
+   RESET SCORE
+========================= */
+
+document
+    .getElementById("resetScore")
+    .addEventListener(
+        "click",
+        ()=>{
+
+            score = {
+
+                wins:0,
+                draws:0,
+                losses:0
+
+            };
+
+
+            /*
+               Score resets,
+               but starter rotation
+               continues.
+            */
+
+            newGame();
+
+        }
+    );
+
+
+/* =========================
+   START
+========================= */
+
+newGame();
+
+</script>
+
+</body>
+</html>
